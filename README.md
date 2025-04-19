@@ -1,73 +1,101 @@
-# Welcome to your Lovable project
 
-## Project info
+# 💻 OnlyCodes — The Dev-Only Social Network
 
-**URL**: https://lovable.dev/projects/eb8477ff-5614-4c8b-8410-7615846a467e
+> A modern, drama-free, full-stack social media platform for developers & programmers.  
+> Built with React, TypeScript, SupaBase, TailwindCSS, and shadcn/ui.
 
-## How can I edit this code?
+![OnlyCodes Banner](./public/og-banner.png)
 
-There are several ways of editing your application.
+---
 
-**Use Lovable**
+## 🚀 About
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/eb8477ff-5614-4c8b-8410-7615846a467e) and start prompting.
+**OnlyCodes** is a Twitter-like platform for developers.  
+No brain-rot. No drama. Just code, snippets, and software talk.
 
-Changes made via Lovable will be committed automatically to this repo.
+Built as a productivity-first social app to connect devs through clean UI, powerful tech, and real conversations.
 
-**Use your preferred IDE**
+---
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 🔧 Tech Stack
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- ⚛️ React + TypeScript (Frontend)
+- 🌬 TailwindCSS (Utility-first CSS)
+- 🧱 shadcn/ui + Material UI (UI Components)
+- 🛠 SupaBase (Auth, DB, Storage, Realtime)
+- ✨ Framer Motion (Animations)
+- 🎨 Prism.js (Syntax highlighting for code)
 
-Follow these steps:
+---
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## 📁 Features
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+- 🧑‍💻 Developer Profiles w/ bio, tech stack, followers
+- 📢 Post code snippets, images, videos & dev thoughts
+- 🧵 Threaded comments, likes, and reposts
+- 🟢 Realtime feed updates via SupaBase Realtime
+- 🔍 Explore trending tags & users
+- 🎨 Light / Dark mode with curve-based UI
+- 🧼 No drama, no off-topic — just code.
 
-# Step 3: Install the necessary dependencies.
-npm i
+---
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+## 🧱 Folder Structure
+
+```
+/src
+ ├── components/      // Reusable UI components
+ ├── pages/           // Route-based views
+ ├── lib/             // SupaBase client, utils
+ ├── styles/          // Custom CSS, themes
+ └── data/            // Static or schema-related content
+```
+
+---
+
+## ⚙️ Getting Started
+
+```bash
+git clone https://github.com/nvmPratyush/onlycodes.git
+cd onlycodes
+
+npm install
+# or
+yarn install
+```
+
+Create a `.env.local` and set:
+```env
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+```
+
+Then run:
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+---
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 🗃 SupaBase Schema
 
-**Use GitHub Codespaces**
+[See Full Schema ➤](./docs/supabase-schema.sql)
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+---
 
-## What technologies are used for this project?
+## 🧠 Inspiration
 
-This project is built with:
+- Twitter for Devs
+- Clean minimalism like Vercel, Linear, Notion
+- Designed to prevent brainrot, nonsense, and off-topic clutter.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+---
 
-## How can I deploy this project?
+## 🛡 License
 
-Simply open [Lovable](https://lovable.dev/projects/eb8477ff-5614-4c8b-8410-7615846a467e) and click on Share -> Publish.
+Apache 2.0 License — see `LICENSE` for details.
 
-## Can I connect a custom domain to my Lovable project?
+---
 
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## ✨ Made with ❤️ by @nvmPratyush
+*made with [loveable](https://lovable.dev/) by [Pratyush](https://github.com/pratyush0898/)*
