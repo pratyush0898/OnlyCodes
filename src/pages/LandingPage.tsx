@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/contexts/AuthContext';
 import { ArrowRight, Code, Users, Heart, MessageSquare } from 'lucide-react';
+import { ModeToggle } from "@/components/theme/ModeToggle";
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -39,20 +40,42 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden">
+      {/* Navbar */}
+      <nav className="border-b border-border bg-background/80 backdrop-blur-md fixed top-0 left-0 right-0 z-50">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-xl text-primary">&lt;/&gt;</span>
+            <h1 className="text-lg font-semibold tracking-tight hidden sm:block">
+              OnlyCodes
+            </h1>
+          </div>
+          
+          <div className="flex items-center gap-2 sm:gap-4">
+            <ModeToggle />
+            <Button variant="ghost" onClick={() => navigate('/login')} className="text-sm">
+              Login
+            </Button>
+            <Button onClick={() => navigate('/signup')} className="text-sm">
+              Sign up
+            </Button>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero Section - Updated padding for navbar */}
+      <div className="relative overflow-hidden pt-16">
         <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-primary/5 z-0" />
         
-        <div className="container mx-auto px-4 py-32 relative z-10">
-          <div className="flex flex-col lg:flex-row items-center justify-between">
-            <div className="lg:w-1/2 mb-10 lg:mb-0">
-              <h1 className="text-4xl md:text-6xl font-bold mb-6">
+        <div className="container mx-auto px-4 py-20 sm:py-32 relative z-10">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-10">
+            <div className="lg:w-1/2">
+              <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold mb-6">
                 Where developers share
                 <span className="text-primary"> code</span> and build
                 <span className="text-primary"> connections</span>
               </h1>
               
-              <p className="text-xl text-muted-foreground mb-8">
+              <p className="text-lg sm:text-xl text-muted-foreground mb-8">
                 Join a community of developers to share snippets, knowledge, and grow your network.
               </p>
               
@@ -67,8 +90,8 @@ export default function LandingPage() {
               </div>
             </div>
             
-            <div className="lg:w-1/2 lg:pl-10">
-              <div className="rounded-lg overflow-hidden border border-border shadow-xl bg-card/50 backdrop-blur">
+            <div className="lg:w-1/2 w-full">
+              <div className="rounded-lg overflow-hidden border border-border shadow-xl bg-card/50 backdrop-blur max-w-xl mx-auto">
                 <div className="p-4 border-b border-border flex items-center gap-2">
                   <div className="h-3 w-3 rounded-full bg-red-500" />
                   <div className="h-3 w-3 rounded-full bg-yellow-500" />
@@ -97,11 +120,11 @@ function calculateEngagement(post) {
       </div>
       
       {/* Features Section */}
-      <div className="bg-secondary/50 py-20">
+      <div className="bg-secondary/50 py-16 sm:py-20">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">Why Developers Love OnlyCodes</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-12">Why Developers Love OnlyCodes</h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
             {features.map((feature, index) => (
               <div 
                 key={index} 
@@ -119,10 +142,10 @@ function calculateEngagement(post) {
       </div>
       
       {/* CTA Section */}
-      <div className="container mx-auto px-4 py-20">
+      <div className="container mx-auto px-4 py-16 sm:py-20">
         <div className="flex flex-col items-center text-center">
-          <h2 className="text-3xl font-bold mb-4">Ready to join the community?</h2>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-4">Ready to join the community?</h2>
+          <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-2xl">
             Create an account today and start sharing your code, connecting with other developers,
             and discovering great content tailored to your interests.
           </p>
@@ -138,9 +161,9 @@ function calculateEngagement(post) {
       </div>
       
       {/* Footer */}
-      <footer className="bg-secondary/50 py-10 border-t border-border">
+      <footer className="bg-secondary/50 py-8 sm:py-10 border-t border-border">
         <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-2">
               <span className="font-bold text-xl text-primary">&lt;/&gt;</span>
               <span className="text-lg font-semibold">OnlyCodes</span>
