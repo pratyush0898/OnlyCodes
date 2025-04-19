@@ -6,10 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/components/ui/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Signup = () => {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
+  const { signUp, loading, user } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     username: '',
@@ -17,6 +18,12 @@ const Signup = () => {
     password: '',
     confirmPassword: ''
   });
+  
+  // If user is already logged in, redirect to home
+  if (user) {
+    navigate('/');
+    return null;
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -44,26 +51,11 @@ const Signup = () => {
       return;
     }
     
-    setIsLoading(true);
-    
     try {
-      // Simulate Supabase auth call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast({
-        title: "Account created",
-        description: "Welcome to OnlyCodes! Start sharing your code knowledge."
-      });
-      
-      navigate('/');
+      await signUp(formData.email, formData.password, formData.username, formData.name);
+      // User will be redirected automatically after signup through the auth state change
     } catch (error) {
-      toast({
-        title: "Registration failed",
-        description: "There was a problem creating your account. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
+      // Error is handled in the signUp function
     }
   };
 
@@ -162,9 +154,9 @@ const Signup = () => {
               <Button 
                 type="submit" 
                 className="w-full"
-                disabled={isLoading}
+                disabled={loading}
               >
-                {isLoading ? 'Creating account...' : 'Sign up'}
+                {loading ? 'Creating account...' : 'Sign up'}
               </Button>
               
               <p className="text-center text-sm text-muted-foreground mt-4">

@@ -6,14 +6,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/components/ui/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Login = () => {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
+  const { signIn, loading, user } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
+
+  // If user is already logged in, redirect to home
+  if (user) {
+    navigate('/');
+    return null;
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -32,26 +39,11 @@ const Login = () => {
       return;
     }
     
-    setIsLoading(true);
-    
     try {
-      // Simulate Supabase auth call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast({
-        title: "Login successful",
-        description: "Welcome back to OnlyCodes!"
-      });
-      
+      await signIn(formData.email, formData.password);
       navigate('/');
     } catch (error) {
-      toast({
-        title: "Login failed",
-        description: "Invalid email or password. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
+      // Error is handled in the signIn function
     }
   };
 
@@ -112,9 +104,9 @@ const Login = () => {
               <Button 
                 type="submit" 
                 className="w-full"
-                disabled={isLoading}
+                disabled={loading}
               >
-                {isLoading ? 'Signing in...' : 'Sign in'}
+                {loading ? 'Signing in...' : 'Sign in'}
               </Button>
               
               <p className="text-center text-sm text-muted-foreground mt-4">

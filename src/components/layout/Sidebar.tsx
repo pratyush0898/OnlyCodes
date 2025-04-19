@@ -11,14 +11,20 @@ import {
   Heart
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Sidebar = () => {
   const location = useLocation();
+  const { profile } = useAuth();
 
   const navigation = [
     { name: 'Home', href: '/', icon: Home },
     { name: 'Explore', href: '/explore', icon: Search },
-    { name: 'Profile', href: '/johndoe', icon: User },
+    { 
+      name: 'Profile', 
+      href: profile?.username ? `/${profile.username}` : '#', 
+      icon: User 
+    },
     { name: 'Settings', href: '/settings', icon: Settings },
   ];
 

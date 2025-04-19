@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -16,20 +16,24 @@ import { Bell, Menu, Search, X } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import Sidebar from './Sidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Navbar = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
+  const { user, profile, signOut } = useAuth();
 
-  // Placeholder for auth state - will be replaced with Supabase auth later
-  const user = { avatarUrl: '', name: 'John Doe' };
-  const isLoggedIn = true;
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/welcome');
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 border-b border-border bg-background/80 backdrop-blur-md z-50">
       <div className="container flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-2">
-          {isMobile && isLoggedIn && (
+          {isMobile && user && (
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="md:hidden">
@@ -43,7 +47,7 @@ const Navbar = () => {
               </SheetContent>
             </Sheet>
           )}
-          <Link to="/" className="flex items-center gap-2">
+          <Link to={user ? "/" : "/welcome"} className="flex items-center gap-2">
             <span className="font-bold text-xl text-primary">&lt;/&gt;</span>
             <h1 className="text-lg font-semibold tracking-tight">
               OnlyCodes
@@ -77,7 +81,7 @@ const Navbar = () => {
             </Button>
           )}
 
-          {isLoggedIn ? (
+          {user ? (
             <>
               <Button variant="ghost" size="icon" asChild>
                 <Link to="/notifications">
@@ -91,20 +95,22 @@ const Navbar = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user.avatarUrl} alt={user.name} />
-                      <AvatarFallback>JD</AvatarFallback>
+                      <AvatarImage src={profile?.avatar_url} alt={profile?.name} />
+                      <AvatarFallback>
+                        {profile?.name ? profile.name.substring(0, 2).toUpperCase() : 'U'}
+                      </AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <DropdownMenuItem asChild>
-                    <Link to="/johndoe">Profile</Link>
+                    <Link to={profile?.username ? `/${profile.username}` : "#"}>Profile</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/settings">Settings</Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>Sign out</DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleSignOut}>Sign out</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </>

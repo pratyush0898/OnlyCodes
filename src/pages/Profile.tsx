@@ -1,130 +1,121 @@
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import MainLayout from '@/components/layout/MainLayout';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import PostFeed from '@/components/posts/PostFeed';
-import { User, Post } from '@/types';
+import { User } from '@/types';
 import { ArrowLeft } from 'lucide-react';
-
-const mockUser: User = {
-  id: '1',
-  username: 'johndoe',
-  name: 'John Doe',
-  bio: 'Frontend Developer & React Enthusiast | Building user-friendly interfaces | TypeScript lover | Open source contributor',
-  avatarUrl: '',
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-  followers: 1240,
-  following: 350
-};
-
-const mockPosts: Post[] = [
-  {
-    id: '1',
-    content: "Just figured out a clean way to handle authentication in React with custom hooks! Game-changer for my workflow.",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    likes: 24,
-    comments: 5,
-    user: mockUser
-  },
-  {
-    id: '2',
-    content: "Here's a useful TypeScript snippet for handling API responses:",
-    codeSnippet: `// Define a generic API response type
-type ApiResponse<T> = {
-  data: T;
-  status: number;
-  message: string;
-};
-
-// Use it with any data type
-async function fetchUsers(): Promise<ApiResponse<User[]>> {
-  const response = await fetch('/api/users');
-  return response.json();
-}
-
-// Now TypeScript knows the exact shape of your data!
-const { data: users, status } = await fetchUsers();`,
-    language: 'typescript',
-    createdAt: new Date(Date.now() - 86400000).toISOString(),
-    updatedAt: new Date(Date.now() - 86400000).toISOString(),
-    likes: 35,
-    comments: 8,
-    user: mockUser
-  }
-];
-
-const mockLikedPosts: Post[] = [
-  {
-    id: '101',
-    content: "Refactoring an old project with the new React patterns and it feels like upgrading from a bicycle to a Tesla!",
-    createdAt: new Date(Date.now() - 172800000).toISOString(),
-    updatedAt: new Date(Date.now() - 172800000).toISOString(),
-    likes: 78,
-    comments: 12,
-    user: {
-      id: '2',
-      username: 'sarahjohnson',
-      name: 'Sarah Johnson',
-      bio: 'TypeScript wizard | Building cool stuff',
-      avatarUrl: '',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
-  }
-];
+import { userService } from '@/services/api';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from '@/components/ui/use-toast';
 
 const Profile = () => {
   const { username } = useParams<{ username: string }>();
-  const [user, setUser] = useState<User | null>(null);
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [likedPosts, setLikedPosts] = useState<Post[]>([]);
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('posts');
-  const [isLoading, setIsLoading] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [isFollowingLoading, setIsFollowingLoading] = useState(false);
 
+  const {
+    data: profile,
+    isLoading: isProfileLoading,
+    error: profileError
+  } = useQuery({
+    queryKey: ['profile', username],
+    queryFn: () => userService.getUserProfile(username || ''),
+    enabled: !!username,
+  });
+
+  const {
+    data: postsData,
+    isLoading: isPostsLoading,
+  } = useQuery({
+    queryKey: ['userPosts', username, activeTab],
+    queryFn: () => {
+      if (activeTab === 'posts') {
+        return userService.getUserPosts(username || '');
+      } else {
+        return userService.getUserLikedPosts(username || '');
+      }
+    },
+    enabled: !!username && !!profile,
+  });
+  
   useEffect(() => {
-    const fetchProfile = async () => {
-      setIsLoading(true);
-      try {
-        // Simulate API call to get user profile
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // In a real app, we'd fetch based on username
-        setUser(mockUser);
-        setPosts(mockPosts);
-        setLikedPosts(mockLikedPosts);
-      } catch (error) {
-        console.error('Error fetching profile:', error);
-      } finally {
-        setIsLoading(false);
+    // Check if current user is following the profile user
+    const checkFollowStatus = async () => {
+      if (user && profile && user.id !== profile.id) {
+        try {
+          const following = await userService.isFollowing(user.id, profile.id);
+          setIsFollowing(following);
+        } catch (error) {
+          console.error('Error checking follow status:', error);
+        }
       }
     };
 
-    fetchProfile();
-  }, [username]);
+    checkFollowStatus();
+  }, [user, profile]);
 
-  const toggleFollow = () => {
-    setIsFollowing(!isFollowing);
-    // In a real app, we'd make an API call to follow/unfollow
+  const toggleFollow = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to follow users.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!profile) return;
+    
+    try {
+      setIsFollowingLoading(true);
+      
+      if (isFollowing) {
+        await userService.unfollowUser(user.id, profile.id);
+        setIsFollowing(false);
+        toast({
+          title: "Unfollowed",
+          description: `You've unfollowed ${profile.name}`
+        });
+      } else {
+        await userService.followUser(user.id, profile.id);
+        setIsFollowing(true);
+        toast({
+          title: "Following",
+          description: `You're now following ${profile.name}`
+        });
+      }
+    } catch (error: any) {
+      console.error('Error toggling follow:', error);
+      toast({
+        title: "Error",
+        description: error.message || "An error occurred while updating follow status.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsFollowingLoading(false);
+    }
   };
 
-  if (isLoading) {
+  if (isProfileLoading) {
     return (
       <MainLayout>
         <div className="flex justify-center items-center py-10">
-          <p className="text-muted-foreground">Loading profile...</p>
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary"></div>
         </div>
       </MainLayout>
     );
   }
 
-  if (!user) {
+  if (profileError || !profile) {
     return (
       <MainLayout>
         <div className="flex flex-col items-center justify-center py-10">
@@ -149,35 +140,47 @@ const Profile = () => {
             <CardContent className="pt-6">
               <div className="flex flex-col items-center sm:items-start sm:flex-row gap-6">
                 <Avatar className="h-24 w-24">
-                  <AvatarImage src={user.avatarUrl} alt={user.name} />
-                  <AvatarFallback className="text-2xl">{user.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                  <AvatarImage src={profile.avatarUrl} alt={profile.name} />
+                  <AvatarFallback className="text-2xl">{profile.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 
                 <div className="flex-1 text-center sm:text-left">
-                  <h1 className="text-2xl font-bold">{user.name}</h1>
-                  <p className="text-muted-foreground">@{user.username}</p>
+                  <h1 className="text-2xl font-bold">{profile.name}</h1>
+                  <p className="text-muted-foreground">@{profile.username}</p>
                   
-                  <p className="my-3">{user.bio}</p>
+                  {profile.bio && <p className="my-3">{profile.bio}</p>}
                   
-                  <div className="flex flex-wrap gap-4 justify-center sm:justify-start">
+                  <div className="flex flex-wrap gap-4 justify-center sm:justify-start mt-3">
                     <div>
-                      <span className="font-medium">{user.following}</span>
+                      <span className="font-medium">{profile.following}</span>
                       <span className="text-muted-foreground ml-1">Following</span>
                     </div>
                     <div>
-                      <span className="font-medium">{user.followers}</span>
+                      <span className="font-medium">{profile.followers}</span>
                       <span className="text-muted-foreground ml-1">Followers</span>
                     </div>
                   </div>
                 </div>
                 
                 <div>
-                  <Button 
-                    onClick={toggleFollow}
-                    variant={isFollowing ? "outline" : "default"}
-                  >
-                    {isFollowing ? 'Following' : 'Follow'}
-                  </Button>
+                  {user && user.id !== profile.id && (
+                    <Button 
+                      onClick={toggleFollow}
+                      variant={isFollowing ? "outline" : "default"}
+                      disabled={isFollowingLoading}
+                    >
+                      {isFollowingLoading ? 'Loading...' : isFollowing ? 'Following' : 'Follow'}
+                    </Button>
+                  )}
+                  
+                  {user && user.id === profile.id && (
+                    <Button 
+                      variant="outline"
+                      onClick={() => navigate('/settings')}
+                    >
+                      Edit Profile
+                    </Button>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -191,21 +194,29 @@ const Profile = () => {
           </TabsList>
           
           <TabsContent value="posts" className="mt-4 animate-fade-in">
-            {posts.length > 0 ? (
-              <PostFeed posts={posts} />
+            {isPostsLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary"></div>
+              </div>
+            ) : postsData?.posts.length ? (
+              <PostFeed posts={postsData.posts} />
             ) : (
               <div className="text-center py-10">
-                <p className="text-muted-foreground">{user.name} hasn't posted anything yet.</p>
+                <p className="text-muted-foreground">{profile.name} hasn't posted anything yet.</p>
               </div>
             )}
           </TabsContent>
           
           <TabsContent value="likes" className="mt-4 animate-fade-in">
-            {likedPosts.length > 0 ? (
-              <PostFeed posts={likedPosts} />
+            {isPostsLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary"></div>
+              </div>
+            ) : postsData?.posts.length ? (
+              <PostFeed posts={postsData.posts} />
             ) : (
               <div className="text-center py-10">
-                <p className="text-muted-foreground">{user.name} hasn't liked any posts yet.</p>
+                <p className="text-muted-foreground">{profile.name} hasn't liked any posts yet.</p>
               </div>
             )}
           </TabsContent>

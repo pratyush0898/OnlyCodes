@@ -2,42 +2,94 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
-import Prism from 'prismjs';
-import 'prismjs/components/prism-javascript';
-import 'prismjs/components/prism-typescript';
-import 'prismjs/components/prism-jsx';
-import 'prismjs/components/prism-tsx';
-import 'prismjs/components/prism-css';
-import 'prismjs/components/prism-python';
+import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
+import js from 'react-syntax-highlighter/dist/esm/languages/hljs/javascript';
+import ts from 'react-syntax-highlighter/dist/esm/languages/hljs/typescript';
+import python from 'react-syntax-highlighter/dist/esm/languages/hljs/python';
+import css from 'react-syntax-highlighter/dist/esm/languages/hljs/css';
+import jsx from 'react-syntax-highlighter/dist/esm/languages/hljs/xml';
+import { vs2015 } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Heart, MessageSquare, Share } from 'lucide-react';
-import { Post } from '@/types';
 import { cn } from '@/lib/utils';
+import { Post } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
+import { postService } from '@/services/api';
+import { toast } from '@/components/ui/use-toast';
+
+SyntaxHighlighter.registerLanguage('javascript', js);
+SyntaxHighlighter.registerLanguage('typescript', ts);
+SyntaxHighlighter.registerLanguage('python', python);
+SyntaxHighlighter.registerLanguage('css', css);
+SyntaxHighlighter.registerLanguage('jsx', jsx);
+SyntaxHighlighter.registerLanguage('tsx', jsx);
 
 interface PostCardProps {
   post: Post;
+  onLike?: (postId: string, liked: boolean) => void;
 }
 
-const PostCard = ({ post }: PostCardProps) => {
+const PostCard = ({ post, onLike }: PostCardProps) => {
+  const { user } = useAuth();
   const [liked, setLiked] = useState(post.isLiked || false);
   const [likeCount, setLikeCount] = useState(post.likes);
+  const [isLikeLoading, setIsLikeLoading] = useState(false);
 
-  // When component mounts, highlight code blocks
   useEffect(() => {
-    if (post.codeSnippet) {
-      setTimeout(() => {
-        Prism.highlightAll();
-      }, 0);
-    }
-  }, [post.codeSnippet]);
+    // Check if the current user has liked this post
+    const checkLikeStatus = async () => {
+      try {
+        if (user) {
+          const isLiked = await postService.isPostLiked(post.id, user.id);
+          setLiked(isLiked);
+        }
+      } catch (error) {
+        console.error('Error checking like status:', error);
+      }
+    };
 
-  const handleLike = () => {
-    setLiked(!liked);
-    setLikeCount(likeCount + (liked ? -1 : 1));
-    // Here you would make API call to Supabase to update likes
+    checkLikeStatus();
+  }, [post.id, user]);
+
+  const handleLike = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to like posts.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setIsLikeLoading(true);
+      
+      if (liked) {
+        await postService.unlikePost(post.id, user.id);
+        setLiked(false);
+        setLikeCount(prev => prev - 1);
+      } else {
+        await postService.likePost(post.id, user.id);
+        setLiked(true);
+        setLikeCount(prev => prev + 1);
+      }
+      
+      if (onLike) {
+        onLike(post.id, !liked);
+      }
+    } catch (error) {
+      console.error('Error liking/unliking post:', error);
+      toast({
+        title: "Error",
+        description: "There was an error updating the like status.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLikeLoading(false);
+    }
   };
 
   return (
@@ -67,11 +119,17 @@ const PostCard = ({ post }: PostCardProps) => {
 
             {post.codeSnippet && (
               <div className="mt-3 overflow-hidden rounded-lg">
-                <pre className="code-block" data-language={post.language || 'typescript'}>
-                  <code className={`language-${post.language || 'typescript'}`}>
-                    {post.codeSnippet}
-                  </code>
-                </pre>
+                <SyntaxHighlighter
+                  language={post.language || 'typescript'}
+                  style={vs2015}
+                  customStyle={{
+                    padding: '1rem',
+                    borderRadius: '0.5rem',
+                    fontSize: '0.875rem'
+                  }}
+                >
+                  {post.codeSnippet}
+                </SyntaxHighlighter>
               </div>
             )}
 
@@ -101,6 +159,7 @@ const PostCard = ({ post }: PostCardProps) => {
           size="sm" 
           className={cn("gap-1", liked && "text-red-500")}
           onClick={handleLike}
+          disabled={isLikeLoading}
         >
           <Heart className="h-4 w-4" fill={liked ? "currentColor" : "none"} />
           <span>{likeCount}</span>
@@ -111,7 +170,17 @@ const PostCard = ({ post }: PostCardProps) => {
             <span>{post.comments}</span>
           </Link>
         </Button>
-        <Button variant="ghost" size="sm">
+        <Button 
+          variant="ghost" 
+          size="sm"
+          onClick={() => {
+            navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
+            toast({
+              title: "Link copied",
+              description: "Post link copied to clipboard."
+            });
+          }}
+        >
           <Share className="h-4 w-4" />
         </Button>
       </CardFooter>

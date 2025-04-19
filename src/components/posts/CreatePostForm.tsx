@@ -13,9 +13,16 @@ import {
 import { Input } from '@/components/ui/input';
 import { Image, Code, X } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { postService } from '@/services/api';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+
+const STORAGE_BUCKET = 'post-media';
 
 const CreatePostForm = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [content, setContent] = useState('');
   const [codeSnippet, setCodeSnippet] = useState('');
   const [language, setLanguage] = useState('typescript');
@@ -23,36 +30,113 @@ const CreatePostForm = () => {
   const [media, setMedia] = useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [mediaUploadProgress, setMediaUploadProgress] = useState(0);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     
     if (!content && !codeSnippet && !media) {
+      toast({
+        title: "Error",
+        description: "Please add some content to your post.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to create posts.",
+        variant: "destructive"
+      });
       return;
     }
     
     setIsSubmitting(true);
     
     try {
-      // Here we would:
-      // 1. Upload media to Supabase storage if present
-      // 2. Create post record in Supabase
+      let mediaUrl = '';
+      let mediaType = null;
       
-      // For now we'll just simulate a success
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Upload media if present
+      if (media) {
+        const fileExt = media.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+        const filePath = `${user.id}/${fileName}`;
+        
+        mediaType = media.type.startsWith('image/') ? 'image' : 'video';
+        
+        const { error: uploadError, data } = await supabase.storage
+          .from(STORAGE_BUCKET)
+          .upload(filePath, media, {
+            upsert: true,
+            onUploadProgress: (progress) => {
+              const percent = (progress.loaded / progress.total) * 100;
+              setMediaUploadProgress(Math.round(percent));
+            }
+          });
+          
+        if (uploadError) {
+          throw uploadError;
+        }
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from(STORAGE_BUCKET)
+          .getPublicUrl(filePath);
+          
+        mediaUrl = publicUrl;
+      }
+      
+      // Create post in database
+      await postService.createPost({
+        content,
+        code_snippet: codeSnippet || undefined,
+        language: codeSnippet ? language : undefined,
+        media_url: mediaUrl || undefined,
+        media_type: mediaType as 'image' | 'video' | undefined,
+        user_id: user.id
+      });
+      
+      toast({
+        title: "Success",
+        description: "Your post has been created."
+      });
+      
+      // Reset form
+      setContent('');
+      setCodeSnippet('');
+      setShowCodeEditor(false);
+      removeMedia();
       
       // Redirect to home feed
       navigate('/');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating post:', error);
+      toast({
+        title: "Error",
+        description: error.message || "An error occurred while creating your post.",
+        variant: "destructive"
+      });
     } finally {
       setIsSubmitting(false);
+      setMediaUploadProgress(0);
     }
   };
 
   const handleMediaChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Check file size (limit to 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "The file size should not exceed 10MB.",
+        variant: "destructive"
+      });
+      return;
+    }
 
     setMedia(file);
     
@@ -88,6 +172,15 @@ const CreatePostForm = () => {
     { value: 'python', label: 'Python' },
     { value: 'html', label: 'HTML' },
   ];
+
+  if (!user) {
+    return (
+      <Card className="p-4 text-center">
+        <p className="text-muted-foreground mb-2">Please sign in to create posts.</p>
+        <Button onClick={() => navigate('/login')}>Sign In</Button>
+      </Card>
+    );
+  }
 
   return (
     <Card className="p-4">
@@ -159,6 +252,15 @@ const CreatePostForm = () => {
               >
                 <X className="h-4 w-4" />
               </Button>
+            </div>
+          )}
+
+          {mediaUploadProgress > 0 && mediaUploadProgress < 100 && (
+            <div className="w-full bg-secondary rounded-full h-2.5">
+              <div 
+                className="bg-primary h-2.5 rounded-full" 
+                style={{ width: `${mediaUploadProgress}%` }}
+              ></div>
             </div>
           )}
 
