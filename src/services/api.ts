@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Post, User } from '@/types';
 
@@ -102,6 +101,21 @@ export const postService = {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
     
+    // Get the list of users that the current user follows
+    const { data: followings } = await supabase
+      .from('follows')
+      .select('following_id')
+      .eq('follower_id', userId);
+    
+    // Extract the following_id values into an array
+    const followingIds = followings?.map(follow => follow.following_id) || [];
+    
+    // If not following anyone, return empty result
+    if (followingIds.length === 0) {
+      return { posts: [], count: 0 };
+    }
+    
+    // Fixed: Now using the array of following_ids correctly
     const { data, error, count } = await supabase
       .from('posts')
       .select(`
@@ -110,7 +124,7 @@ export const postService = {
         likes:likes(count),
         comments:comments(count)
       `, { count: 'exact' })
-      .in('user_id', supabase.from('follows').select('following_id').eq('follower_id', userId))
+      .in('user_id', followingIds)
       .order('created_at', { ascending: false })
       .range(from, to);
       

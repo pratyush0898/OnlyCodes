@@ -1,4 +1,3 @@
-
 import { useState, ChangeEvent, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -67,14 +66,11 @@ const CreatePostForm = () => {
         
         mediaType = media.type.startsWith('image/') ? 'image' : 'video';
         
+        // Fixed: Removed onUploadProgress which isn't supported in FileOptions
         const { error: uploadError, data } = await supabase.storage
           .from(STORAGE_BUCKET)
           .upload(filePath, media, {
-            upsert: true,
-            onUploadProgress: (progress) => {
-              const percent = (progress.loaded / progress.total) * 100;
-              setMediaUploadProgress(Math.round(percent));
-            }
+            upsert: true
           });
           
         if (uploadError) {
