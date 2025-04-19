@@ -15,6 +15,7 @@ import { ModeToggle } from '@/components/theme/ModeToggle';
 import { Bell, Menu, Search, X } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import Sidebar from './Sidebar';
+import { LogoText } from '@/components/Logo/LogoText';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -47,15 +48,11 @@ const Navbar = () => {
               </SheetContent>
             </Sheet>
           )}
-          <Link to={user ? "/" : "/welcome"} className="flex items-center gap-2">
-            <img 
-              src="/logo.png" 
-              alt="OnlyCodes Logo" 
-              className="h-8 w-8 object-contain"
-            />
-            <h1 className="text-lg font-semibold tracking-tight">
+          <Link to={user ? "/" : "/welcome"} className="flex items-center gap-2 text-black dark:text-white">
+            <LogoText className="h-8 w-auto" />
+            {/* <h1 className="text-lg font-semibold tracking-tight">
               OnlyCodes
-            </h1>
+            </h1> */}
           </Link>
         </div>
 
@@ -131,7 +128,7 @@ const Navbar = () => {
           )}
         </div>
       </div>
-      
+
       {searchOpen && isMobile && (
         <div className="flex justify-center p-2 border-t border-border animate-fade-in">
           <div className="relative w-full max-w-md">
