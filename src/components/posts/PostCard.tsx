@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import Prism from 'prismjs';
@@ -26,13 +26,13 @@ const PostCard = ({ post }: PostCardProps) => {
   const [likeCount, setLikeCount] = useState(post.likes);
 
   // When component mounts, highlight code blocks
-  useState(() => {
+  useEffect(() => {
     if (post.codeSnippet) {
       setTimeout(() => {
         Prism.highlightAll();
       }, 0);
     }
-  });
+  }, [post.codeSnippet]);
 
   const handleLike = () => {
     setLiked(!liked);
