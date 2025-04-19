@@ -1,4 +1,4 @@
-
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,7 +9,6 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   
-  // If user is already logged in, redirect to home
   if (user) {
     navigate('/');
     return null;
@@ -40,11 +39,14 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Navbar */}
       <nav className="border-b border-border bg-background/80 backdrop-blur-md fixed top-0 left-0 right-0 z-50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-xl text-primary">&lt;/&gt;</span>
+            <img 
+              src="/logo.png" 
+              alt="OnlyCodes Logo" 
+              className="h-8 w-8 object-contain"
+            />
             <h1 className="text-lg font-semibold tracking-tight hidden sm:block">
               OnlyCodes
             </h1>
@@ -62,7 +64,6 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* Hero Section - Updated padding for navbar */}
       <div className="relative overflow-hidden pt-16">
         <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-primary/5 z-0" />
         
@@ -119,7 +120,6 @@ function calculateEngagement(post) {
         </div>
       </div>
       
-      {/* Features Section */}
       <div className="bg-secondary/50 py-16 sm:py-20">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-12">Why Developers Love OnlyCodes</h2>
@@ -141,7 +141,6 @@ function calculateEngagement(post) {
         </div>
       </div>
       
-      {/* CTA Section */}
       <div className="container mx-auto px-4 py-16 sm:py-20">
         <div className="flex flex-col items-center text-center">
           <h2 className="text-2xl sm:text-3xl font-bold mb-4">Ready to join the community?</h2>
@@ -160,7 +159,6 @@ function calculateEngagement(post) {
         </div>
       </div>
       
-      {/* Footer */}
       <footer className="bg-secondary/50 py-8 sm:py-10 border-t border-border">
         <div className="container mx-auto px-4">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">

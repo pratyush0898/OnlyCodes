@@ -1,4 +1,4 @@
-
+import React from 'react';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -48,7 +48,11 @@ const Navbar = () => {
             </Sheet>
           )}
           <Link to={user ? "/" : "/welcome"} className="flex items-center gap-2">
-            <span className="font-bold text-xl text-primary">&lt;/&gt;</span>
+            <img 
+              src="/logo.png" 
+              alt="OnlyCodes Logo" 
+              className="h-8 w-8 object-contain"
+            />
             <h1 className="text-lg font-semibold tracking-tight">
               OnlyCodes
             </h1>
